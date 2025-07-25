@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Y3 华文听写 AUG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=KaiTi&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Comic+Sans+MS&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue-theme: #E3F2FD;
+  --pink-theme: #FCE4EC;
+  --purple-theme: #F3E5F5;
+  --green-theme: #E8F5E9;
+}
+body {
+  font-family: 'KaiTi', serif;
+  background-color: #f7fafc;
+  margin: 0;
+  padding: 0;
+}
+.flashcard-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  padding: 10px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+@media (max-width: 600px) {
+  .flashcard-container {
+    grid-template-columns: 1fr;
+    padding: 5px;
+    gap: 10px;
+  }
+}
+.card-group {
+  padding: 15px;
+  border-radius: 12px;
+  display: none;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.group-1 { background-color: var(--blue-theme); }
+.group-2 { background-color: var(--pink-theme); }
+.group-3 { background-color: var(--purple-theme); }
+.group-4 { background-color: var(--green-theme); }
+.card {
+  width: 100%;
+  height: 200px;
+  margin: 10px auto;
+  perspective: 1000px;
+  cursor: pointer;
+}
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: white;
+}
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  border-radius: 8px;
+  background: white;
+  font-size: 20px;
+  word-wrap: break-word;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.card-front {
+  font-family: 'Comic Sans MS', cursive;
+  color: #333;
+}
+.card-back {
+  transform: rotateY(180deg);
+  font-family: 'KaiTi', serif;
+  color: #333;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.sentence .card-front,
+.sentence .card-back {
+  font-size: 15px;
+  line-height: 1.5;
+}
+.group-title {
+  font-weight: bold;
+  padding: 8px 0;
+  margin-bottom: 10px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  font-size: 28px;
+  font-family: 'KaiTi', serif;
+  text-align: center;
+}
+.button-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 15px 0;
+  padding: 0 10px;
+}
+.button-container button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  color: black;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: 'Comic Sans MS', cursive;
+  transition: opacity 0.3s ease;
+  flex-grow: 1;
+  max-width: 120px;
+}
+.button-container button.group-1-btn {
+  background-color: var(--blue-theme);
+}
+.button-container button.group-2-btn {
+  background-color: var(--pink-theme);
+}
+.button-container button.group-3-btn {
+  background-color: var(--purple-theme);
+}
+.button-container button.group-4-btn {
+  background-color: var(--green-theme);
+}
+.button-container button:hover {
+  opacity: 0.8;
+}
+.instruction {
+  text-align: center;
+  margin: 10px 0;
+  color: #666;
+  font-size: 18px;
+  font-family: 'KaiTi', serif;
+  padding: 0 10px;
+}
+.header {
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 15px 0;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #333;
+}
+.meaning {
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+  font-style: italic;
+}
+.translation {
+  font-size: 14px;
+  color: #444;
+  margin-top: 8px;
+  font-style: normal;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Y3 华文听写 AUG</h1>
+  <p class="instruction">点击卡片翻转并播放华文读音 Click the card to flip and hear pronunciation</p>
+</div>
+<div class="button-container">
+  <button class="group-1-btn" onclick="toggleGroup('group-1')">8-14/8</button>
+  <button class="group-2-btn" onclick="toggleGroup('group-2')">15-21/8</button>
+  <button class="group-3-btn" onclick="toggleGroup('group-3')">22-28/8</button>
+  <button class="group-4-btn" onclick="toggleGroup('group-4')">1-7/9</button>
+</div>
+<div class="flashcard-container">
+  <!-- 8-14/8 -->
+  <section id="group-1" class="card-group group-1">
+    <h2 class="group-title">8-14/8</h2>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">niàn tou<br><span class="meaning">心里的想法</span></div>
+        <div class="card-back">念头<br><span class="translation">thought / idea<br>niat / fikiran</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">wú lù kě tuì<br><span class="meaning">已经到了绝境，没有办法再退后</span></div>
+        <div class="card-back">无路可退<br><span class="translation">no way to retreat<br>tiada jalan berundur</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">hòu huǐ<br><span class="meaning">为过去做错的事感到懊恼</span></div>
+        <div class="card-back">后悔<br><span class="translation">regret<br>menyesal</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">yōu liáng<br><span class="meaning">非常好，品质高</span></div>
+        <div class="card-back">优良<br><span class="translation">excellent / outstanding<br>cemerlang / unggul</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">fēn fù<br><span class="meaning">上对下地交代事情或发出命令</span></div>
+        <div class="card-back">吩咐<br><span class="translation">instruct / command<br>menyuruh / mengarah</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">xīn fán<br><span class="meaning">心情不好，感到烦恼</span></div>
+        <div class="card-back">心烦<br><span class="translation">upset / annoyed<br>gelisah / resah</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">piān<br><span class="meaning">文章的单位</span></div>
+        <div class="card-back">篇<br><span class="translation">(a) piece (of writing)<br>sehelai / sebuah (artikel)</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">yīng yǒng<br><span class="meaning">勇敢无畏</span></div>
+        <div class="card-back">英勇<br><span class="translation">brave / heroic<br>berani / gagah berani</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">bī<br><span class="meaning">强迫、压迫</span></div>
+        <div class="card-back">逼<br><span class="translation">force / pressure<br>memaksa</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">qīng chu<br><span class="meaning">明白、明确</span></div>
+        <div class="card-back">清楚<br><span class="translation">clear<br>jelas</span></div>
+      </div>
+    </div>
+    <div class="card sentence">
+      <div class="card-inner">
+        <div class="card-front">yīng yǒng de wǒ jūn dǎ de dí rén bào tóu shǔ cuàn<br><span class="meaning">勇敢的我方军队把敌人打得四处逃跑，非常狼狈</span></div>
+        <div class="card-back">英勇的我军打得敌人抱头鼠窜。<br><span class="translation">Our brave troops fought so fiercely that the enemy fled in panic.<br>Tentera kita yang berani telah menyerang sehingga musuh lari lintang-pukang.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15-21/8 -->
+  <section id="group-2" class="card-group group-2">
+    <h2 class="group-title">15-21/8</h2>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">hé ǎi<br><span class="meaning">态度亲切、温和（常用于形容长辈）</span></div>
+        <div class="card-back">和蔼<br><span class="translation">kind / amiable<br>ramah / mesra</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">fá<br><span class="meaning">因犯错而受到惩处</span></div>
+        <div class="card-back">罚<br><span class="translation">punish<br>menghukum</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">céng jīng<br><span class="meaning">表示过去有过某种经历或情况</span></div>
+        <div class="card-back">曾经<br><span class="translation">once / ever<br>pernah</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">fù<br><span class="meaning">量词，用于职位、眼镜、表情等</span></div>
+        <div class="card-back">副<br><span class="translation">a pair / deputy<br>sepasang / seorang pembantu / timbalan</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">nǐ zhēng wǒ qiǎng<br><span class="meaning">形容大家激烈地争夺</span></div>
+        <div class="card-back">你争我抢<br><span class="translation">scramble / fight over<br>berebut-rebut</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">nǔ lì<br><span class="meaning">尽力去做，用心不懈</span></div>
+        <div class="card-back">努力<br><span class="translation">work hard / strive<br>berusaha keras</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">bēi āi<br><span class="meaning">感到非常伤心、难过</span></div>
+        <div class="card-back">悲哀<br><span class="translation">sorrow / sadness<br>sedih / pilu</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">liè<br><span class="meaning">破开，分成几部分</span></div>
+        <div class="card-back">裂<br><span class="translation">crack / split<br>retak / pecah</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">jiǎn tǎo<br><span class="meaning">反省自己的错误或不足</span></div>
+        <div class="card-back">检讨<br><span class="translation">review / reflect<br>menilai semula / muhasabah</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">jiào xun<br><span class="meaning">从失败或错误中得到的经验或惩罚性的教育</span></div>
+        <div class="card-back">教训<br><span class="translation">lesson / punishment<br>pengajaran / hukuman</span></div>
+      </div>
+    </div>
+    <div class="card sentence">
+      <div class="card-inner">
+        <div class="card-front">qiú chǎng shàng de qiú yuán nǐ zhēng wǒ qiǎng, fēn fēn pīn jìn quán lì, xī wàng néng jìn rù jué sài<br><span class="meaning">球场上的球员激烈争夺，个个使出全力，希望能够晋级决赛</span></div>
+        <div class="card-back">球场上的球员你争我抢，纷纷拼尽全力，希望能进入决赛。<br><span class="translation">The players on the field scrambled and gave their all, hoping to reach the finals.<br>Para pemain di padang berebut-rebut dan berusaha sedaya upaya, berharap dapat mara ke perlawanan akhir.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 22-28/8 -->
+  <section id="group-3" class="card-group group-3">
+    <h2 class="group-title">22-28/8</h2>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">tuì xiū<br><span class="meaning">因年老或达到规定年限而停止工作</span></div>
+        <div class="card-back">退休<br><span class="translation">retire<br>bersara</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">yǎ rán shī xiào<br><span class="meaning">忍不住轻轻笑出声来</span></div>
+        <div class="card-back">哑然失笑<br><span class="translation">chuckle / smile unintentionally<br>tersenyum tanpa sedar / tergelak kecil</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">pài<br><span class="meaning">分派、安排（人去做某事）</span></div>
+        <div class="card-back">派<br><span class="translation">assign / dispatch<br>menghantar / menugaskan</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">chéng jī<br><span class="meaning">学习或工作上的成果</span></div>
+        <div class="card-back">成绩<br><span class="translation">result / achievement<br>keputusan / pencapaian</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">pào zhì<br><span class="meaning">原指配药，现也可指编造或制作（多含贬义）</span></div>
+        <div class="card-back">炮制<br><span class="translation">fabricate / concoct<br>mengada-adakan / mencipta (cerita)</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">nù qì<br><span class="meaning">生气的情绪</span></div>
+        <div class="card-back">怒气<br><span class="translation">anger<br>kemarahan</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">qiāng dàn<br><span class="meaning">枪用的子弹</span></div>
+        <div class="card-back">枪弹<br><span class="translation">bullet / ammunition<br>peluru senjata</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">tuì shǎi<br><span class="meaning">颜色变淡、消失</span></div>
+        <div class="card-back">褪色<br><span class="translation">fade / lose color<br>pudar</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">nǐ zhēng wǒ qiǎng<br><span class="meaning">大家都争着抢东西，形容场面混乱</span></div>
+        <div class="card-back">你争我抢<br><span class="translation">scramble / fight over<br>berebut-rebut</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">fàng pào<br><span class="meaning">点燃鞭炮或开火炮，也可比喻说气话或发火</span></div>
+        <div class="card-back">放炮<br><span class="translation">set off firecrackers / fire a shot<br>menyalakan mercun / melepaskan tembakan</span></div>
+      </div>
+    </div>
+    <div class="card sentence">
+      <div class="card-inner">
+        <div class="card-front">kàn dào dì di chuān zhe mā ma de gāo gēn xié zǒu lù de yàng zi, wǒ bù jīn yǎ rán shī xiào<br><span class="meaning">看到弟弟穿着妈妈的高跟鞋走路的样子，我忍不住笑了出来</span></div>
+        <div class="card-back">看到弟弟穿着妈妈的高跟鞋走路的样子，我不禁哑然失笑。<br><span class="translation">Seeing my younger brother walking in mom’s high heels, I couldn't help but chuckle.<br>Melihat adik lelaki berjalan dengan memakai kasut tumit tinggi ibu, saya tidak dapat menahan senyum.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1-7/9 -->
+  <section id="group-4" class="card-group group-4">
+    <h2 class="group-title">1-7/9</h2>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">xīn huā nù fàng<br><span class="meaning">形容非常高兴、开心到极点</span></div>
+        <div class="card-back">心花怒放<br><span class="translation">overjoyed / beaming with joy<br>sangat gembira / hati berbunga-bunga</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">jiǎn<br><span class="meaning">把掉在地上的东西拾起来</span></div>
+        <div class="card-back">捡<br><span class="translation">pick up / collect<br>memungut / mengambil</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">pào gān<br><span class="meaning">干煸过的肉干、腊味（常指一种食品）</span></div>
+        <div class="card-back">炮干<br><span class="translation">spiced dried meat / meat jerky<br>daging kering (berempah atau dipanggang)</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">yǎ líng<br><span class="meaning">一种锻炼身体的器械，常用来练习手臂力量</span></div>
+        <div class="card-back">哑铃<br><span class="translation">dumbbell<br>pemberat tangan / dumbel</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">tuì bù<br><span class="meaning">成绩、表现比以前差了</span></div>
+        <div class="card-back">退步<br><span class="translation">regress / decline<br>merosot / mundur</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">jī tuǐ<br><span class="meaning">鸡的大腿部分</span></div>
+        <div class="card-back">鸡腿<br><span class="translation">chicken drumstick / thigh<br>peha ayam</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">liè kāi<br><span class="meaning">破裂，出现裂缝或分开</span></div>
+        <div class="card-back">裂开<br><span class="translation">crack open / split<br>retak / pecah</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">yǎ yǎ xué yǔ<br><span class="meaning">形容婴儿牙牙学语、学着说话的样子</span></div>
+        <div class="card-back">哑哑学语<br><span class="translation">babble / baby talk<br>bercakap seperti bayi / pelat</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">jī liè<br><span class="meaning">强烈、剧烈（常用于比赛、争论等）</span></div>
+        <div class="card-back">激烈<br><span class="translation">intense / fierce<br>sengit / hebat</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-front">měng liè<br><span class="meaning">力量大、程度高（常用于风雨、攻击、情绪等）</span></div>
+        <div class="card-back">猛烈<br><span class="translation">fierce / violent / intense<br>kuat / dahsyat</span></div>
+      </div>
+    </div>
+    <div class="card sentence">
+      <div class="card-inner">
+        <div class="card-front">yī tīng dào zì jǐ huò jiǎng de xiāo xī, tā dùn shí xīn huā nù fàng<br><span class="meaning">一听到自己得奖的消息，他立刻高兴得不得了</span></div>
+        <div class="card-back">一听到自己获奖的消息，他顿时心花怒放。<br><span class="translation">As soon as he heard the news that he had won the award, he was overjoyed.<br>Sebaik sahaja mendengar berita bahawa dia memenangi anugerah, dia serta-merta berasa sangat gembira.</span></div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+// 显示第一组默认
+window.onload = function() {
+  document.getElementById('group-1').style.display = 'block';
+};
+
+// 切换卡片组显示
+function toggleGroup(groupId) {
+  // 隐藏所有组
+  document.querySelectorAll('.card-group').forEach(group => {
+    group.style.display = 'none';
+  });
+  // 显示选中的组
+  const group = document.getElementById(groupId);
+  group.style.display = 'block';
+  
+  // 收起所有翻转的卡片
+  document.querySelectorAll('.card').forEach(card => {
+    card.classList.remove('flipped');
+  });
+}
+
+// 卡片交互功能
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('click', function() {
+    this.classList.toggle('flipped');
+    // 播放中文词语读音
+    const chineseWord = this.querySelector('.card-back').firstChild.textContent.trim();
+    playAudio(chineseWord);
+  });
+});
+
+// 语音播放功能（朗读中文）
+function playAudio(text) {
+  if (window.speechSynthesis) {
+    // 取消当前正在播放的语音
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-CN';
+    utterance.rate = 0.9; // 稍微慢一点
+    
+    // 处理移动设备上的自动播放限制
+    const play = () => {
+      window.speechSynthesis.speak(utterance);
+    };
+    
+    // 有些移动设备需要用户交互后才能播放声音
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel();
+      setTimeout(play, 100);
+    } else {
+      play();
+    }
+  } else {
+    alert("您的浏览器不支持语音合成功能，请使用Chrome或Edge浏览器");
+  }
+}
+</script>
+</body>
+</html>
